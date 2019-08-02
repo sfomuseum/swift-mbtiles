@@ -1,5 +1,7 @@
 // https://stackoverflow.com/questions/29262624/nsimage-to-nsdata-as-png-swift
 
+#if !os(iOS)
+
 import AppKit
 
 extension NSBitmapImageRep {
@@ -27,3 +29,5 @@ extension NSImage {
 
     }
 }
+
+#endif

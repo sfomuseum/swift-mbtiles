@@ -1,6 +1,7 @@
 import SQLite
 import Foundation
-import AppKit
+
+import Cocoa
 
 // https://github.com/stephencelis/SQLite.swift/blob/master/Documentation/Index.md
 // note that SQLite.swift defines its own Result type so be explicit about Swift.Result below
