@@ -133,9 +133,6 @@ class MBTiles {
 			return .failure(error)
 		}
 		
-		// why is this happening... (20190801/thisisaaronland)
-		// Thread 33: EXC_BAD_ACCESS (code=1, address=0x8000000000000028)
-		
 		dbconns[db_path] = conn
 		semaphore.signal()
 		

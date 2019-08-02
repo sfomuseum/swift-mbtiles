@@ -4,13 +4,16 @@ import Foundation
 class MBTileUtils {
 	
 	public enum Errors: Error {
-		case pathError
+    		case pathError
+		case isNotExistError
 	}
 	
 	var mb: MBTiles
+    	var tile_root: String
 
-	init(){
+    	init(root: String){
 		mb = MBTiles()
+		tile_root = root
 	}
 	
 	func ReadTileAsDataURL(rel_path: String)->Result<String, Error>{
@@ -32,12 +35,12 @@ class MBTileUtils {
 		
 		switch parts[1] {
 		case "png":
-			db_name = "base.db"
+			db_name = "base"
 			z = parts[2]
 			x = parts[3]
 			y = parts[4].replacingOccurrences(of: ".png", with: "")
 		case "aerial":
-			db_name = parts[2] + ".db"
+			db_name = parts[2]
 			z = parts[3]
 			x = parts[4]
 			y = parts[5].replacingOccurrences(of: ".png", with: "")
@@ -46,9 +49,10 @@ class MBTileUtils {
 			return .failure(Errors.pathError)
 		}
 		
-		let path_db = "tiles/sqlite/" + db_name		
-		let db_path = FileUtils.BundlePath(path_db)
-		
+		guard let db_path = NSBundle.mainBundle().pathForResource("db_name", ofType: "db", inDirectory: tile_root) else {
+		    return .failure(Errors.pathError)
+		}
+	
 		// it sure would be nice to be able to return mb.ReadTileAsDataURL(...)
 		
 		let data_rsp = mb.ReadTileAsDataURL(db_path: db_path, z: z, x: x, y: y)
