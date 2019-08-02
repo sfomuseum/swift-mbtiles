@@ -1,10 +1,10 @@
-// import UIKit
 import Foundation
 
 class MBTileUtils {
 	
 	public enum Errors: Error {
     		case pathError
+    		case bundleError	
 		case isNotExistError
 	}
 	
@@ -48,9 +48,9 @@ class MBTileUtils {
 
 			return .failure(Errors.pathError)
 		}
-		
-		guard let db_path = NSBundle.mainBundle().pathForResource("db_name", ofType: "db", inDirectory: tile_root) else {
-		    return .failure(Errors.pathError)
+
+		guard let db_path = Bundle.main.path(forResource:db_name, ofType: "db", inDirectory: tile_root) else {
+		    return .failure(Errors.bundleError)
 		}
 	
 		// it sure would be nice to be able to return mb.ReadTileAsDataURL(...)

@@ -1,6 +1,6 @@
 import SQLite
-// import UIKit
 import Foundation
+import AppKit
 
 // https://github.com/stephencelis/SQLite.swift/blob/master/Documentation/Index.md
 // note that SQLite.swift defines its own Result type so be explicit about Swift.Result below
@@ -26,9 +26,9 @@ class MBTiles {
 	
 	func ReadTileAsDataURL(db_path: String, z: String, x: String, y: String) -> Swift.Result<String, Error> {
 		
-		let im_result = ReadTileAsUIImage(db_path: db_path, z: z, x: x, y: y)
+		let im_result = ReadTileAsNSImage(db_path: db_path, z: z, x: x, y: y)
 		
-		let im: UIImage
+		let im: NSImage
 		
 		switch im_result {
 		case .failure(let error):
@@ -47,7 +47,7 @@ class MBTiles {
 		return .success(uri)
 	}
 	
-	func ReadTileAsUIImage(db_path: String, z: String, x: String, y: String)->Swift.Result<UIImage, Error>{
+	func ReadTileAsNSImage(db_path: String, z: String, x: String, y: String)->Swift.Result<NSImage, Error>{
 		
 		let blob_rsp = ReadTileAsBlob(db_path: db_path, z: z, x: x, y: y)
 		let blob: SQLite.Blob
@@ -60,7 +60,7 @@ class MBTiles {
 		}
 		
 		
-		guard let im = UIImage(data: Data.fromDatatypeValue(blob)) else {
+		guard let im = NSImage(data: Data.fromDatatypeValue(blob)) else {
 			return .failure(Errors.blobError)
 		}
 		
