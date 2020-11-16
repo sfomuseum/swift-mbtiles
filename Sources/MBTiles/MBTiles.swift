@@ -26,9 +26,9 @@ class MBTiles {
 	
 	func ReadTileAsDataURL(db_path: String, z: String, x: String, y: String) -> Swift.Result<String, Error> {
 		
-		let im_result = ReadTileAsNSImage(db_path: db_path, z: z, x: x, y: y)
+		let im_result = ReadTileAsUIImage(db_path: db_path, z: z, x: x, y: y)
 		
-		let im: NSImage
+		let im: UIImage
 		
 		switch im_result {
 		case .failure(let error):
@@ -47,7 +47,7 @@ class MBTiles {
 		return .success(uri)
 	}
 	
-	func ReadTileAsNSImage(db_path: String, z: String, x: String, y: String)->Swift.Result<NSImage, Error>{
+	func ReadTileAsUIImage(db_path: String, z: String, x: String, y: String)->Swift.Result<UIImage, Error>{
 		
 		let data_rsp = ReadTileAsData(db_path: db_path, z: z, x: x, y: y)
 		let data: Data
