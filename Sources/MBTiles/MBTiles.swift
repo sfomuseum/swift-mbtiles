@@ -1,5 +1,4 @@
 import Foundation
-import Cocoa
 import FMDB
 
 class MBTiles {
@@ -59,7 +58,7 @@ class MBTiles {
 			data = d
 		}
 		
-		guard let im = NSImage(data: data) else {
+		guard let im = UIImage(data: data) else {
 			return .failure(Errors.blobError)
 		}
 		
