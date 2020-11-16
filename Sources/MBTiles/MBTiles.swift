@@ -1,7 +1,8 @@
 import SQLite
 import Foundation
-
 import Cocoa
+
+import FMDB
 
 // https://github.com/stephencelis/SQLite.swift/blob/master/Documentation/Index.md
 // note that SQLite.swift defines its own Result type so be explicit about Swift.Result below
