@@ -23,8 +23,8 @@ let package = Package(
             dependencies: [
 		"SQLite"
 	    ]),
-        .testTarget(
-            name: "MBTilesTests",
-            dependencies: ["MBTiles"]),
+        //.testTarget(
+        //    name: "MBTilesTests",
+        //    dependencies: ["MBTiles"]),
     ]
 )
