@@ -1,6 +1,10 @@
 import Foundation
 import FMDB
 
+#if os(iOS)
+import UIKit
+#endif
+
 class MBTiles {
 	
 	public enum Errors: Error {
