@@ -4,7 +4,7 @@
 import Cocoa
 
 // Step 1: Typealias UIImage to NSImage
-typealias UIImage = NSImage
+public typealias UIImage = NSImage
 
 // Step 2: You might want to add these APIs that UIImage has but NSImage doesn't.
 extension NSImage {

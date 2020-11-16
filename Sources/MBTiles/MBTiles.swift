@@ -55,11 +55,11 @@ public class MBTiles {
 	
 	var dbconns: [String: FMDatabase]
 	
-	init() {
+	public init() {
 		dbconns = [:]
 	}
 	
-    func ListTiles(db_path: String) -> Result<StringIterator, Error> {
+    public func ListTiles(db_path: String) -> Result<StringIterator, Error> {
         
         var db_name = URL.init(string: db_path)?.lastPathComponent ?? ""
         db_name = db_name.replacingOccurrences(of: ".db", with: "")
@@ -91,7 +91,7 @@ public class MBTiles {
         return .success(iter)
     }
     
-	func ReadTileAsDataURL(db_path: String, z: String, x: String, y: String) -> Swift.Result<String, Error> {
+	public func ReadTileAsDataURL(db_path: String, z: String, x: String, y: String) -> Swift.Result<String, Error> {
 		
 		let im_result = ReadTileAsUIImage(db_path: db_path, z: z, x: x, y: y)
 		
@@ -114,7 +114,7 @@ public class MBTiles {
 		return .success(uri)
 	}
 	
-	func ReadTileAsUIImage(db_path: String, z: String, x: String, y: String)->Swift.Result<UIImage, Error>{
+	public func ReadTileAsUIImage(db_path: String, z: String, x: String, y: String)->Result<UIImage, Error>{
 		
 		let data_rsp = ReadTileAsData(db_path: db_path, z: z, x: x, y: y)
 		let data: Data
@@ -133,7 +133,7 @@ public class MBTiles {
 		return .success(im)
 	}
 	
-	func ReadTileAsData(db_path: String, z: String, x: String, y: String)->Swift.Result<Data, Error>{
+	public func ReadTileAsData(db_path: String, z: String, x: String, y: String)->Swift.Result<Data, Error>{
 		
 		let conn_rsp = dbConn(db_path: db_path)
 		let db: FMDatabase
