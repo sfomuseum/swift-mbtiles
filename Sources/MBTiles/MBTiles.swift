@@ -14,13 +14,15 @@ class MBTiles {
 		case pngError
 		case blobError
 		case nullDataError
+        case databaseURI
+        case databaseOpen
 	}
 	
 	// https://developer.apple.com/documentation/dispatch/dispatchsemaphore
 	// https://stackoverflow.com/questions/46169519/mutex-alternatives-in-swift
 	let semaphore = DispatchSemaphore(value: 1)
 	
-	var dbconns: [String: Connection]
+	var dbconns: [String: FMDatabase]
 	
 	init() {
 		dbconns = [:]
@@ -72,7 +74,7 @@ class MBTiles {
 	func ReadTileAsBlob(db_path: String, z: String, x: String, y: String)->Swift.Result<SQLite.Blob, Error>{
 		
 		let conn_rsp = dbConn(db_path: db_path)
-		let conn: Connection
+		let conn: FMDatabase
 		
 		switch conn_rsp {
 		case .failure(let error):
@@ -108,12 +110,12 @@ class MBTiles {
 		return .success(tile_data as! SQLite.Blob)
 	}
 	
-	private func dbConn(db_path: String)->Swift.Result<Connection, Error> {
+	private func dbConn(db_path: String)->Swift.Result<FMDatabase, Error> {
 		
 		semaphore.wait()
 		// wishing I could Go-style defer semaphore.signal()...
 		
-		var conn: Connection!
+		var conn: FMDatabase!
 		
 		if let _ = dbconns[db_path] {
 			conn = dbconns[db_path]
@@ -127,17 +129,19 @@ class MBTiles {
 			return .failure(Errors.isNotExistError)
 		}
 		
-		do {
-			conn = try Connection(db_path, readonly: true)
-		} catch {
-			print("unable to open db \(db_path) because: \(error)")
-			semaphore.signal()
-			return .failure(error)
-		}
-		
-		dbconns[db_path] = conn
-		semaphore.signal()
-		
-		return .success(conn)
+        guard let db_uri = URL(string: db_path) else {
+            return .failure(Errors.databaseURI)
+        }
+        
+        let db = FMDatabase(url: db_uri)
+        
+        guard db.open() else {
+            return .failure(Errors.databaseOpen)
+        }
+        
+        dbconns[db_path] = db
+        semaphore.signal()
+        
+        return .success(db)
 	}
 }
