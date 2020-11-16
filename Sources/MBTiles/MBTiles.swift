@@ -5,6 +5,42 @@ import FMDB
 import UIKit
 #endif
 
+protocol StringIterator {
+    func next() -> String
+}
+
+struct TileIterator: StringIterator {
+    
+    let db_path: String
+    let rs: FMResultSet
+    
+    init(db_path: String, db_iter: FMResultSet) {
+        self.db_path = db_path
+        self.rs = db_iter
+    }
+    
+    func next() ->String {
+        
+        rs.next()
+                
+        guard let z = rs.int(forColumn: "z") else {
+            return ""
+        }
+
+        guard let x = rs.int(forColumn: "x") else {
+            return ""
+        }
+        
+        guard let y = rs.int(forColumn: "y") else {
+            return ""
+        }
+        
+        let path = String(format: "%@/%d/%d/%d.png", db_path, z, x, y)
+        return path
+    }
+    
+}
+
 class MBTiles {
 	
 	public enum Errors: Error {
@@ -27,6 +63,42 @@ class MBTiles {
 		dbconns = [:]
 	}
 	
+    func ListTiles(db_path: String) -> Result<StringIterator, Error> {
+        
+        var db_name = URL.init(string: db_path)?.lastPathComponent ?? ""
+        db_name = db_name.replacingOccurrences(of: ".db", with: "")
+        
+        let conn_rsp = dbConn(db_path: db_path)
+        let db: FMDatabase
+        
+        switch conn_rsp {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let d):
+            db = d
+        }
+        
+        var rs: FMResultSet
+        
+        let q = "SELECT map.zoom_level AS z, map.tile_column AS x, map.tile_row AS y, images.tile_data AS tile_data FROM map JOIN images ON images.tile_id = map.tile_id"
+
+        // query = query + " WHERE z < 19 ORDER BY z DESC"
+
+        do  {
+            rs = try db.executeQuery(q, values: nil)
+            
+        } catch {
+            return .failure(error)
+        }
+
+        
+        // https://developer.apple.com/documentation/swift/iteratorprotocol
+        // https://github.com/apple/swift/blob/master/docs/SequencesAndCollections.rst
+        // https://www.swiftbysundell.com/articles/swift-sequences-the-art-of-being-lazy/
+        
+        // return .failure(Errors.notImplemented)
+    }
+    
 	func ReadTileAsDataURL(db_path: String, z: String, x: String, y: String) -> Swift.Result<String, Error> {
 		
 		let im_result = ReadTileAsUIImage(db_path: db_path, z: z, x: x, y: y)
