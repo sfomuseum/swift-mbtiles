@@ -5,6 +5,10 @@ import FMDB
 import UIKit
 #endif
 
+// https://developer.apple.com/documentation/swift/iteratorprotocol
+// https://github.com/apple/swift/blob/master/docs/SequencesAndCollections.rst
+// https://www.swiftbysundell.com/articles/swift-sequences-the-art-of-being-lazy/
+
 protocol StringIterator {
     func next() -> String
 }
@@ -14,26 +18,18 @@ struct TileIterator: StringIterator {
     let db_path: String
     let rs: FMResultSet
     
-    init(db_path: String, db_iter: FMResultSet) {
+    init(db_path: String, result_set: FMResultSet) {
         self.db_path = db_path
-        self.rs = db_iter
+        self.rs = result_set
     }
     
     func next() ->String {
         
         rs.next()
                 
-        guard let z = rs.int(forColumn: "z") else {
-            return ""
-        }
-
-        guard let x = rs.int(forColumn: "x") else {
-            return ""
-        }
-        
-        guard let y = rs.int(forColumn: "y") else {
-            return ""
-        }
+        let z = rs.int(forColumn: "z")
+        let x = rs.int(forColumn: "x")
+        let y = rs.int(forColumn: "y")
         
         let path = String(format: "%@/%d/%d/%d.png", db_path, z, x, y)
         return path
@@ -91,12 +87,8 @@ class MBTiles {
             return .failure(error)
         }
 
-        
-        // https://developer.apple.com/documentation/swift/iteratorprotocol
-        // https://github.com/apple/swift/blob/master/docs/SequencesAndCollections.rst
-        // https://www.swiftbysundell.com/articles/swift-sequences-the-art-of-being-lazy/
-        
-        // return .failure(Errors.notImplemented)
+        let iter = TileIterator(db_path: db_path, result_set: rs)
+        return .success(iter)
     }
     
 	func ReadTileAsDataURL(db_path: String, z: String, x: String, y: String) -> Swift.Result<String, Error> {
