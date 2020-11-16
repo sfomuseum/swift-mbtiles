@@ -1,11 +1,6 @@
-import SQLite
 import Foundation
 import Cocoa
-
 import FMDB
-
-// https://github.com/stephencelis/SQLite.swift/blob/master/Documentation/Index.md
-// note that SQLite.swift defines its own Result type so be explicit about Swift.Result below
 
 class MBTiles {
 	
@@ -16,6 +11,7 @@ class MBTiles {
 		case nullDataError
         case databaseURI
         case databaseOpen
+        case databaseTile
 	}
 	
 	// https://developer.apple.com/documentation/dispatch/dispatchsemaphore
@@ -53,61 +49,54 @@ class MBTiles {
 	
 	func ReadTileAsNSImage(db_path: String, z: String, x: String, y: String)->Swift.Result<NSImage, Error>{
 		
-		let blob_rsp = ReadTileAsBlob(db_path: db_path, z: z, x: x, y: y)
-		let blob: SQLite.Blob
+		let data_rsp = ReadTileAsData(db_path: db_path, z: z, x: x, y: y)
+		let data: Data
 		
-		switch blob_rsp {
+		switch data_rsp {
 		case .failure(let error):
 			return .failure(error)
-		case .success(let b):
-			blob = b
+		case .success(let d):
+			data = d
 		}
 		
-		
-		guard let im = NSImage(data: Data.fromDatatypeValue(blob)) else {
+		guard let im = NSImage(data: data) else {
 			return .failure(Errors.blobError)
 		}
 		
 		return .success(im)
 	}
 	
-	func ReadTileAsBlob(db_path: String, z: String, x: String, y: String)->Swift.Result<SQLite.Blob, Error>{
+	func ReadTileAsData(db_path: String, z: String, x: String, y: String)->Swift.Result<Data, Error>{
 		
 		let conn_rsp = dbConn(db_path: db_path)
-		let conn: FMDatabase
+		let db: FMDatabase
 		
 		switch conn_rsp {
 		case .failure(let error):
 			return .failure(error)
 		case .success(let c):
-			conn = c
+			db = c
 		}
 		
-		// please move this in to init()
-		var get_tile: Statement
-		
+        var body: Data
+        
+        let q = "SELECT i.tile_data AS tile_data FROM map m, images i WHERE i.tile_id = m.tile_id AND m.zoom_level=? AND m.tile_column=? AND m.tile_row=?"
+        
 		do  {
-			get_tile = try conn.prepare("SELECT i.tile_data FROM map m, images i WHERE i.tile_id = m.tile_id AND m.zoom_level=? AND m.tile_column=? AND m.tile_row=?")
+            let rs = try db.executeQuery(q, values: [ z, x, y])
+            rs.next()
+            
+            guard let data = rs.data(forColumn: "tile_data") else {
+                return .failure(Errors.databaseTile)
+            }
+            
+            body = data
+            
 		} catch {
 			return .failure(error)
 		}
-		
-		var tile_data: SQLite.Blob?
-		
-		do {
-			try get_tile = get_tile.run(z, x, y)
-			tile_data = try get_tile.scalar() as? SQLite.Blob
-				
-			if (tile_data == nil){
-				return .failure(Errors.nullDataError)
-			}
-
-		} catch {
-			print(db_path, z, x, y, error)
-			return .failure(error)
-		}
-		
-		return .success(tile_data as! SQLite.Blob)
+    
+		return .success(body)
 	}
 	
 	private func dbConn(db_path: String)->Swift.Result<FMDatabase, Error> {
