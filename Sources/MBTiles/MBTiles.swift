@@ -9,7 +9,7 @@ import UIKit
 // https://github.com/apple/swift/blob/master/docs/SequencesAndCollections.rst
 // https://www.swiftbysundell.com/articles/swift-sequences-the-art-of-being-lazy/
 
-protocol StringIterator {
+public protocol StringIterator {
     func next() -> String
 }
 
@@ -37,7 +37,7 @@ struct TileIterator: StringIterator {
     
 }
 
-class MBTiles {
+public class MBTiles {
 	
 	public enum Errors: Error {
 		case isNotExistError
