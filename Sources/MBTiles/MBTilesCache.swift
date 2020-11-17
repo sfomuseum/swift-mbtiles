@@ -4,7 +4,7 @@ import Foundation
 public class MBTilesCache {
     
     var logger: Logger?
-    var mbutils: MBTileUtils
+    var mb: MBTilesManager
     
     var precache_tiles_throttle = 10
     var skip = Array<String>()
@@ -13,17 +13,17 @@ public class MBTilesCache {
     public let cache = NSCache<NSString, NSString>()
     public let missing = NSCache<NSString, NSString>()
     
-    public init(root: String?, skip: Array<String>, throttle: Int, logger: Logger?){
+    public init(manager: MBTilesManager, skip: Array<String>, throttle: Int, logger: Logger?){
         
         self.logger = logger
-        self.mbutils = MBTileUtils(root: root, logger: logger)
+        self.mb = manager
         self.precache_tiles_throttle = throttle
         self.skip = skip
     }
     
     public func PrecacheTileData(callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
         
-        let rsp = mbutils.Databases()
+        let rsp = self.mb.Databases()
         
         switch rsp {
         case .failure(let error):
@@ -54,7 +54,7 @@ public class MBTilesCache {
     
     public func PrecacheTileDataForDatabase(path: String,  callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
         
-        let tiles_rsp = mbutils.ListTilesForDatabase(db_path: path)
+        let tiles_rsp = self.mb.ListTilesForDatabase(rel_path: path)
         
         switch tiles_rsp {
         case .failure(let error):
@@ -85,7 +85,7 @@ public class MBTilesCache {
                 
                 DispatchQueue.global(qos: .default).async {
                     
-                    let load_rsp = self.mbutils.ReadTileAsDataURL(rel_path: tile_path, callback: callback)
+                    let load_rsp = self.mb.ReadTileAsDataURLFromURI(rel_path: tile_path, callback: callback)
                     
                     switch load_rsp {
                     case .success(let tile_data) :

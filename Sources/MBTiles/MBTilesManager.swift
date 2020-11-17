@@ -13,6 +13,7 @@ public class MBTilesManager {
 		case pngError
 		case blobError
 		case nullDataError
+        case listError
         case databaseURI
         case databaseOpen
         case databaseTile
@@ -25,16 +26,89 @@ public class MBTilesManager {
 	var dbconns: [String: FMDatabase]
     var logger: Logger?
     
-    public init(logger: Logger?) {
+    let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    var prefix: String?
+    
+    public init(prefix: String?, logger: Logger?) {
         self.dbconns = [:]
         self.logger = logger
+        self.prefix = prefix
 	}
 	
-    public func ListTiles(db_path: String) -> Result<StringIterator, Error> {
+    public func DatabaseRoot() -> URL {
+                
+        self.logger?.debug("filemanager root is \(root)")
         
-        var db_name = URL.init(string: db_path)?.lastPathComponent ?? ""
-        db_name = db_name.replacingOccurrences(of: ".db", with: "")
+        var db_root = self.root
         
+        if self.prefix != nil {
+            db_root = root.appendingPathComponent(self.prefix!)
+        }
+        
+        self.logger?.debug("database root is \(db_root)")
+        return db_root
+    }
+    
+    public func DatabasePath(rel_path: String) -> String {
+        
+        // This is what we used to do when we bundled the tile databases with
+        // the app itself (20191002/thisisaaronland)
+        // let path_db = "tiles/sqlite/" + db_name
+        // let bundle_path = FileUtils.BundlePath(path_db)
+        
+        // This is what we do now when we copy the tile databases in to the app's
+        // Documents folder using the Apple Configurator tool (20191002/thisisaaronland)
+        
+        let db_root =  self.DatabaseRoot()
+        let db_url = db_root.appendingPathComponent(rel_path)
+        
+        let db_path = db_url.absoluteString
+        return db_path.replacingOccurrences(of: "file://", with: "")
+    }
+    
+    public func DatabasePathFromTile(tile: MBTile) -> String {
+        let rel_path = String(format: "%@.db", tile.prefix)
+        return DatabasePath(rel_path: rel_path)
+    }
+    
+    public func Databases() -> Result<[URL], Error> {
+        
+        let db_root = self.DatabaseRoot()
+        
+        do {
+            let directoryContents = try FileManager.default.contentsOfDirectory(at: db_root, includingPropertiesForKeys: nil)
+            
+            var databases = [URL]()
+            
+            for url in directoryContents.filter({ $0.pathExtension == "db" }) {
+                databases.append(url)
+            }
+            
+            return .success(databases)
+            
+        } catch (let error) {
+            self.logger?.error("Failed to list databases in \(db_root): \(error)")
+            return .failure(error)
+        }
+    }
+    
+    public func ListTilesForDatabase(rel_path: String)->Result<StringIterator, Error> {
+        
+        let db_rsp = ListTiles(rel_path: rel_path)
+        
+        switch db_rsp {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let db_iter):
+            return .success(db_iter)
+        }
+    }
+    
+    
+    public func ListTiles(rel_path: String) -> Result<StringIterator, Error> {
+                
+        let db_path = DatabasePath(rel_path: rel_path)
+
         let conn_rsp = dbConn(db_path: db_path)
         let db: FMDatabase
         
@@ -62,9 +136,35 @@ public class MBTilesManager {
         return .success(iter)
     }
     
-	public func ReadTileAsDataURL(db_path: String, z: String, x: String, y: String) -> Swift.Result<String, Error> {
+    public func ReadTileAsDataURLFromURI(rel_path: String, callback: (_ rel_path: String) -> Result<MBTile, Error>)->Result<String, Error>{
+        
+        self.logger?.debug("read tile as data URL from '\(rel_path)'")
+        
+        var tile: MBTile
+        let tile_rsp = callback(rel_path)
+        
+        switch tile_rsp {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let t):
+            tile = t
+        }
+        
+        self.logger?.debug("read tile as data URL from '\(tile.prefix)'")
+        
+        let data_rsp = ReadTileAsDataURL(tile: tile)
+        
+        switch data_rsp {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let body):
+            return .success(body )
+        }
+    }
+    
+    public func ReadTileAsDataURL(tile: MBTile) -> Swift.Result<String, Error> {
 		
-		let im_result = ReadTileAsUIImage(db_path: db_path, z: z, x: x, y: y)
+        let im_result = ReadTileAsUIImage(tile: tile)
 		
 		let im: UIImage
 		
@@ -85,9 +185,9 @@ public class MBTilesManager {
 		return .success(uri)
 	}
 	
-	public func ReadTileAsUIImage(db_path: String, z: String, x: String, y: String)->Result<UIImage, Error>{
+    public func ReadTileAsUIImage(tile: MBTile)->Result<UIImage, Error>{
 		
-		let data_rsp = ReadTileAsData(db_path: db_path, z: z, x: x, y: y)
+        let data_rsp = ReadTileAsData(tile: tile)
 		let data: Data
 		
 		switch data_rsp {
@@ -104,8 +204,10 @@ public class MBTilesManager {
 		return .success(im)
 	}
 	
-	public func ReadTileAsData(db_path: String, z: String, x: String, y: String)->Swift.Result<Data, Error>{
+    public func ReadTileAsData(tile: MBTile)->Swift.Result<Data, Error>{
 		
+        let db_path = DatabasePathFromTile(tile: tile) 
+        
 		let conn_rsp = dbConn(db_path: db_path)
 		let db: FMDatabase
 		
@@ -116,6 +218,10 @@ public class MBTilesManager {
 			db = c
 		}
 		
+        let z = tile.z
+        let x = tile.x
+        let y = tile.y
+        
         var body: Data
         
         let q = "SELECT i.tile_data AS tile_data FROM map m, images i WHERE i.tile_id = m.tile_id AND m.zoom_level=? AND m.tile_column=? AND m.tile_row=?"
@@ -139,6 +245,7 @@ public class MBTilesManager {
 	
 	private func dbConn(db_path: String)->Swift.Result<FMDatabase, Error> {
 		
+        self.logger?.debug("Get database connection for \(db_path)")
 		semaphore.wait()
 		// wishing I could Go-style defer semaphore.signal()...
 		
@@ -151,7 +258,7 @@ public class MBTilesManager {
 		}
 		
 		if !FileManager.default.fileExists(atPath: db_path) {
-			print("SQLite database \(db_path) does not exist")
+            self.logger?.error("SQLite database \(db_path) does not exist")
 			semaphore.signal()
 			return .failure(Errors.isNotExistError)
 		}
