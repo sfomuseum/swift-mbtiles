@@ -1,6 +1,6 @@
 import Foundation
 
-class MBTileUtils {
+public class MBTileUtils {
 	
 	public enum Errors: Error {
     		case pathError
@@ -16,7 +16,7 @@ class MBTileUtils {
 		tile_root = root
 	}
 	
-	func ReadTileAsDataURL(rel_path: String)->Result<String, Error>{
+	public func ReadTileAsDataURL(rel_path: String)->Result<String, Error>{
 		
 		// I tried doing it the right way with regular expressions
 		// but they are even weirder in Swift than they are in Go
