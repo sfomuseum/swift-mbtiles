@@ -18,11 +18,11 @@ public protocol StringIterator {
 
 struct MBTilesIterator: StringIterator {
     
-    let db_path: String
+    let prefix: String
     let rs: FMResultSet
     
-    init(db_path: String, result_set: FMResultSet) {
-        self.db_path = db_path
+    init(prefix: String, result_set: FMResultSet) {
+        self.prefix = prefix
         self.rs = result_set
     }
     
@@ -34,7 +34,7 @@ struct MBTilesIterator: StringIterator {
         let x = rs.int(forColumn: "x")
         let y = rs.int(forColumn: "y")
         
-        let path = String(format: "%@/%d/%d/%d.png", db_path, z, x, y)
+        let path = String(format: "%@/%d/%d/%d.png", prefix, z, x, y)
         return path
     }
     

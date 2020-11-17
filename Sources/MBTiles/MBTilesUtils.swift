@@ -1,4 +1,5 @@
 import Foundation
+import Logging
 
 public class MBTileUtils {
     
@@ -11,10 +12,12 @@ public class MBTileUtils {
     
     var mb: MBTilesManager
     var tile_root: String?
-        
-    public init(root: String?){
-        mb = MBTilesManager()
-        tile_root = root
+    var logger: Logger?
+    
+    public init(root: String?, logger: Logger?){
+        self.mb = MBTilesManager(logger: logger)
+        self.logger = logger
+        self.tile_root = root
     }
     
     public func DatabaseRoot() -> URL {
@@ -25,6 +28,7 @@ public class MBTileUtils {
             root = root.appendingPathComponent(tile_root!)
         }
         
+        self.logger?.debug("database root is \(root)")
         return root
     }
     
@@ -79,38 +83,7 @@ public class MBTileUtils {
     
     public func ReadTileAsDataURL(rel_path: String, callback: (_ rel_path: String) -> Result<MBTile, Error>)->Result<String, Error>{
         
-        // I tried doing it the right way with regular expressions
-        // but they are even weirder in Swift than they are in Go
-        // which is saying something... (20190624/thisisaaronland)
-        // let base_pat = "tiles/png/(\\d+)\\/(\\d+)/(\\d+)\\.png"
-        // let aerial_pat = "tiles/aerial/(\\d{4})/(\\d+)/(\\d+)/(\\d+)\\.png"
-        // let base_re = NSRegularExpression(pattern: base_pat, options: nil, error: nil)
-        // let aerial_re = NSRegularExpression(pattern: aerial_pat, options: nil, error: nil)
-        
-        /*
-        var z: String
-        var x: String
-        var y: String
-        var db_name: String
-        
-        let parts = rel_path.components(separatedBy: "/")
-        
-        switch parts[1] {
-        case "png":
-            db_name = "base"
-            z = parts[2]
-            x = parts[3]
-            y = parts[4].replacingOccurrences(of: ".png", with: "")
-        case "aerial":
-            db_name = parts[2]
-            z = parts[3]
-            x = parts[4]
-            y = parts[5].replacingOccurrences(of: ".png", with: "")
-        default:
-            
-            return .failure(Errors.pathError)
-        }
-        */
+        self.logger?.debug("read tile as data URL from '\(rel_path)'")
         
         var tile: MBTile
         let tile_rsp = callback(rel_path)
@@ -122,9 +95,13 @@ public class MBTileUtils {
             tile = t
         }
         
+        self.logger?.debug("read tile as data URL from '\(tile.prefix)'")
+        
         guard let db_path = Bundle.main.path(forResource:tile.prefix, ofType: "db", inDirectory: tile_root) else {
             return .failure(Errors.bundleError)
         }
+        
+        self.logger?.debug("read tile as data URL with '\(db_path)'")
         
         // it sure would be nice to be able to return mb.ReadTileAsDataURL(...)
         

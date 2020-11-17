@@ -1,5 +1,6 @@
 import Foundation
 import FMDB
+import Logging
 
 #if os(iOS)
 import UIKit
@@ -22,9 +23,11 @@ public class MBTilesManager {
 	let semaphore = DispatchSemaphore(value: 1)
 	
 	var dbconns: [String: FMDatabase]
-	
-	public init() {
-		dbconns = [:]
+    var logger: Logger?
+    
+    public init(logger: Logger?) {
+        self.dbconns = [:]
+        self.logger = logger
 	}
 	
     public func ListTiles(db_path: String) -> Result<StringIterator, Error> {
@@ -55,7 +58,7 @@ public class MBTilesManager {
             return .failure(error)
         }
 
-        let iter = MBTilesIterator(db_path: db_path, result_set: rs)
+        let iter = MBTilesIterator(prefix: db_path, result_set: rs)
         return .success(iter)
     }
     
