@@ -1,7 +1,7 @@
 import Logging
 import Foundation
 
-class MBTilesCache {
+public class MBTilesCache {
     
     var logger: Logger?
     var mbutils: MBTileUtils
@@ -14,7 +14,7 @@ class MBTilesCache {
     var precache_tiles_throttle = 10
     var skip = Array<String>()
     
-    init(root: String?, skip: Array<String>, throttle: Int, logger: Logger?){
+    public init(root: String?, skip: Array<String>, throttle: Int, logger: Logger?){
         
         self.logger = logger
         self.mbutils = MBTileUtils(root: root, logger: logger)

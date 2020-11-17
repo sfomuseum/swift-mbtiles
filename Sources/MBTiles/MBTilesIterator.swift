@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by asc on 11/17/20.
-//
-
 import Foundation
 import FMDB
 
