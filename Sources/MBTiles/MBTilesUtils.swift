@@ -98,6 +98,7 @@ public class MBTileUtils {
         self.logger?.debug("read tile as data URL from '\(tile.prefix)'")
         
         guard let db_path = Bundle.main.path(forResource:tile.prefix, ofType: "db", inDirectory: tile_root) else {
+            self.logger?.warning("Failed to derive path for database \(tile.prefix) in \(String(describing: tile_root))")
             return .failure(Errors.bundleError)
         }
         
