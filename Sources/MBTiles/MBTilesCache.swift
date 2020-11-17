@@ -6,13 +6,12 @@ public class MBTilesCache {
     var logger: Logger?
     var mbutils: MBTileUtils
     
-    let reading = AtomicInteger(value:0)
-    
-    let cache = NSCache<NSString, NSString>()
-    let missing = NSCache<NSString, NSString>()
-    
     var precache_tiles_throttle = 10
     var skip = Array<String>()
+    
+    public let reading = AtomicInteger(value:0)    
+    public let cache = NSCache<NSString, NSString>()
+    public let missing = NSCache<NSString, NSString>()
     
     public init(root: String?, skip: Array<String>, throttle: Int, logger: Logger?){
         
