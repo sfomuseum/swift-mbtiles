@@ -26,27 +26,22 @@ public class MBTilesManager {
 	var dbconns: [String: FMDatabase]
     var logger: Logger?
     
-    let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-    var prefix: String?
+    // where tiles live
+    var root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     
-    public init(prefix: String?, logger: Logger?) {
+    public init(root: URL?, logger: Logger?) {
         self.dbconns = [:]
         self.logger = logger
-        self.prefix = prefix
-	}
+
+        if root != nil {
+            self.root = root!
+        }
+    }
 	
     public func DatabaseRoot() -> URL {
-                
-        self.logger?.debug("filemanager root is \(root)")
-        
-        var db_root = self.root
-        
-        if self.prefix != nil {
-            db_root = root.appendingPathComponent(self.prefix!)
-        }
-        
-        self.logger?.debug("database root is \(db_root)")
-        return db_root
+          
+        self.logger?.debug("database root is \(self.root)")
+        return self.root
     }
     
     public func DatabasePath(rel_path: String) -> String {
