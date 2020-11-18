@@ -48,6 +48,8 @@ public class MBTilesCache {
     
     public func PrecacheTileDataForDatabase(path: String,  callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
         
+        self.logger?.info("Precache tiles for \(path)")
+        
         let tiles_rsp = self.db_reader.ListTiles(db_pool: self.db_pool, db_path: path)
         
         switch tiles_rsp {
@@ -82,7 +84,7 @@ public class MBTilesCache {
                     
                     switch tile_rsp {
                     case .failure(let error):
-                        self.logger?.warning("Failed to derive tile path \(error)")
+                        self.logger?.warning("Failed to derive tile path from \(tile_path), \(error)")
                         return
                     case .success(let t):
                         tile = t
