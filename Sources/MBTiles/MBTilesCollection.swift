@@ -28,14 +28,6 @@ public class MBTilesCollection {
         
         self.logger?.debug("Get database paths for \(rel_path)")
         
-        // This is what we used to do when we bundled the tile databases with
-        // the app itself (20191002/thisisaaronland)
-        // let path_db = "tiles/sqlite/" + db_name
-        // let bundle_path = FileUtils.BundlePath(path_db)
-        
-        // This is what we do now when we copy the tile databases in to the app's
-        // Documents folder using the Apple Configurator tool (20191002/thisisaaronland)
-        
         let db_root =  self.DatabaseRoot()
         
         self.logger?.debug("Database root is \(db_root)")
@@ -48,7 +40,6 @@ public class MBTilesCollection {
     }
     
     public func DatabasePathFromTile(tile: MBTile) -> String {
-        // let rel_path = String(format: "%@.db", )
         return DatabasePath(rel_path: tile.prefix)
     }
     
@@ -62,13 +53,6 @@ public class MBTilesCollection {
             var databases = [URL]()
             
             for url in directoryContents.filter({ $0.pathExtension == "db" }) {
-                
-                /*
-                guard let base = url.baseURL else {
-                    continue
-                }
-                */
-                
                 databases.append(url)
             }
             
