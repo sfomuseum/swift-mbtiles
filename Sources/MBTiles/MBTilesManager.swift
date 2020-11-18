@@ -246,6 +246,8 @@ public class MBTilesManager {
 	
 	private func dbConn(db_path: String)->Swift.Result<FMDatabase, Error> {
 		
+        print("GET DB CONN FOR \(db_path)")
+        
         self.logger?.debug("Get database connection for \(db_path)")
 		semaphore.wait()
 		// wishing I could Go-style defer semaphore.signal()...
