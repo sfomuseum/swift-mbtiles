@@ -24,9 +24,6 @@ public class MBTilesManager {
     // https://stackoverflow.com/questions/46169519/mutex-alternatives-in-swift
     let semaphore = DispatchSemaphore(value: 1)
     
-    // var dbqueue: FMDatabaseQueue
-    
-    //var dbconns: [String: FMDatabase]
     var dbconns: [String: FMDatabaseQueue]
     
     var logger: Logger?
@@ -35,9 +32,7 @@ public class MBTilesManager {
     var root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     
     public init(root: URL?, logger: Logger?) {
-        
-        // self.dbqueue = FMDatabaseQueue()
-        
+                
         self.dbconns = [:]
         self.logger = logger
         
@@ -290,14 +285,11 @@ public class MBTilesManager {
     
     // private func dbConn(db_path: String)->Swift.Result<FMDatabase, Error> {
     private func dbConn(db_path: String)->Swift.Result<FMDatabaseQueue, Error> {
-        
-        print("GET DB CONN FOR \(db_path)")
-        
+                
         self.logger?.debug("Get database connection for \(db_path)")
         semaphore.wait()
         // wishing I could Go-style defer semaphore.signal()...
         
-        // var conn: FMDatabase!
         var conn: FMDatabaseQueue!
         
         if let _ = dbconns[db_path] {
@@ -317,17 +309,8 @@ public class MBTilesManager {
         }
         
         guard let db = FMDatabaseQueue(url: db_uri) else {
-            print("SAD DB QUEUE...")
-            return .failure(Errors.databaseURI)
+            return .failure(Errors.databaseOpen)
         }
-        
-        /*
-         let db = FMDatabase(url: db_uri)
-         
-         guard db.open() else {
-         return .failure(Errors.databaseOpen)
-         }
-         */
         
         dbconns[db_path] = db
         semaphore.signal()
