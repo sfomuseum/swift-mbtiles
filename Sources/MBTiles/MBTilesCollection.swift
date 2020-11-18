@@ -63,11 +63,13 @@ public class MBTilesCollection {
             
             for url in directoryContents.filter({ $0.pathExtension == "db" }) {
                 
+                /*
                 guard let base = url.baseURL else {
                     continue
                 }
+                */
                 
-                databases.append(base)
+                databases.append(url)
             }
             
             return .success(databases)

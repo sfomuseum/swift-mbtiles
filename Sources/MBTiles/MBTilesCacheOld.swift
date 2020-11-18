@@ -1,32 +1,42 @@
 import Logging
 import Foundation
 
-public class MBTilesCache {
+public class MBTilesCacheOld {
     
     var logger: Logger?
-    var db_pool: MBTilesDatabasePool
-    var db_reader: MBTilesReader
+    var mb: MBTilesManager
     
     var precache_tiles_throttle = 10
     var skip = Array<String>()
     
-    public let reading = AtomicInteger(value:0)    
+    public let reading = AtomicInteger(value:0)
     public let cache = NSCache<NSString, NSString>()
     public let missing = NSCache<NSString, NSString>()
     
-    public init(db_pool: MBTilesDatabasePool, db_reader: MBTilesReader, throttle: Int, logger: Logger?){
-
-        self.db_pool = db_pool
-        self.db_reader = db_reader
+    public init(manager: MBTilesManager, skip: Array<String>, throttle: Int, logger: Logger?){
+        
         self.logger = logger
+        self.mb = manager
         self.precache_tiles_throttle = throttle
+        self.skip = skip
     }
     
-    public func PrecacheTileData(databases: Array<URL>, callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
-                
+    public func PrecacheTileData(callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
+        
+        let rsp = self.mb.Databases()
+        
+        switch rsp {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let databases):
+            
             for url in databases {
                 
-                // let fname = url.lastPathComponent
+                let fname = url.lastPathComponent
+                
+                if self.skip.contains(fname) {
+                    continue
+                }
                 
                 var path = url.absoluteString
                 path = path.replacingOccurrences(of: "file://", with: "")
@@ -37,13 +47,14 @@ public class MBTilesCache {
                     self.logger?.error("Failed to precache '\(path)': \(db_error)")
                 }
             }
+        }
         
         return .success(true)
     }
     
     public func PrecacheTileDataForDatabase(path: String,  callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
         
-        let tiles_rsp = self.db_reader.ListTiles(db_pool: self.db_pool, db_path: path)
+        let tiles_rsp = self.mb.ListTilesForDatabase(rel_path: path)
         
         switch tiles_rsp {
         case .failure(let error):
@@ -74,19 +85,7 @@ public class MBTilesCache {
                 
                 DispatchQueue.global(qos: .default).async {
                     
-                    let tile_rsp = callback(tile_path)
-                    
-                    var tile: MBTile
-                    
-                    switch tile_rsp {
-                    case .failure(let error):
-                        self.logger?.warning("Failed to derive tile path \(error)")
-                        return
-                    case .success(let t):
-                        tile = t
-                    }
-                    
-                    let load_rsp = self.db_reader.ReadTileAsDataURL(db_pool: self.db_pool, db_path: path, tile: tile)
+                    let load_rsp = self.mb.ReadTileAsDataURLFromURI(rel_path: tile_path, callback: callback)
                     
                     switch load_rsp {
                     case .success(let tile_data) :
