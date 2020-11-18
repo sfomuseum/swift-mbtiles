@@ -16,7 +16,7 @@ public class MBTilesCache {
     public let missing = NSCache<NSString, NSString>()
     
     public init(db_pool: MBTilesDatabasePool, db_reader: MBTilesReader, resolver: MBTilesResolver, throttle: Int, logger: Logger?){
-
+        
         self.db_pool = db_pool
         self.db_reader = db_reader
         self.resolver = resolver
@@ -28,18 +28,18 @@ public class MBTilesCache {
     // see notes about onload_callback below (20201118/thisisaaronland)
     
     public func PrecacheTileData(databases: Array<URL>) -> Result<Bool, Error> {
-                
-            for url in databases {
-                                
-                var path = url.absoluteString
-                path = path.replacingOccurrences(of: "file://", with: "")
-                
-                let db_rsp = self.PrecacheTileDataForDatabase(path: path)
-                
-                if case .failure(let db_error) = db_rsp {
-                    self.logger?.error("Failed to precache '\(path)': \(db_error)")
-                }
+        
+        for url in databases {
+            
+            var path = url.absoluteString
+            path = path.replacingOccurrences(of: "file://", with: "")
+            
+            let db_rsp = self.PrecacheTileDataForDatabase(path: path)
+            
+            if case .failure(let db_error) = db_rsp {
+                self.logger?.error("Failed to precache '\(path)': \(db_error)")
             }
+        }
         
         return .success(true)
     }
@@ -63,7 +63,7 @@ public class MBTilesCache {
             while true {
                 
                 let tile_path = iter.next()
-                                
+                
                 if tile_path == "" {
                     self.logger?.info("next tile path is empty \(path)")
                     break
@@ -98,12 +98,10 @@ public class MBTilesCache {
                         
                         self.logger?.debug("Preloaded \(tile_path)")
                         
-                    /*
-                     DispatchQueue.main.async {
-                     self.cache.setObject(NSString(string: tile_data), forKey:NSString(string: tile_path))
-                     }
-                     */
-                    
+                        DispatchQueue.main.async {
+                            self.cache.setObject(NSString(string: tile_data), forKey:NSString(string: tile_path))
+                        }
+                        
                     case .failure(let error):
                         self.logger?.error("Failed to load tile for pre-caching '\(tile_path)': \(error)")
                     }
