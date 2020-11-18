@@ -46,6 +46,8 @@ public class MBTilesManager {
     
     public func DatabasePath(rel_path: String) -> String {
         
+        self.logger?.debug("Get database paths for \(rel_path)")
+        
         // This is what we used to do when we bundled the tile databases with
         // the app itself (20191002/thisisaaronland)
         // let path_db = "tiles/sqlite/" + db_name
@@ -55,15 +57,19 @@ public class MBTilesManager {
         // Documents folder using the Apple Configurator tool (20191002/thisisaaronland)
         
         let db_root =  self.DatabaseRoot()
+        
+        self.logger?.debug("Database root is \(db_root)")
         let db_url = db_root.appendingPathComponent(rel_path)
         
         let db_path = db_url.absoluteString
+        self.logger?.debug("Database path is \(db_path)")
+        
         return db_path.replacingOccurrences(of: "file://", with: "")
     }
     
     public func DatabasePathFromTile(tile: MBTile) -> String {
-        let rel_path = String(format: "%@.db", tile.prefix)
-        return DatabasePath(rel_path: rel_path)
+        // let rel_path = String(format: "%@.db", )
+        return DatabasePath(rel_path: tile.prefix)
     }
     
     public func Databases() -> Result<[URL], Error> {
