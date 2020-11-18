@@ -11,11 +11,13 @@ public protocol StringIterator {
 
 struct MBTilesIterator: StringIterator {
     
+    let resolver: MBTilesResolver
     let prefix: String
     let rs: FMResultSet
     
-    init(prefix: String, result_set: FMResultSet) {
+    init(prefix: String, resolver: MBTilesResolver, result_set: FMResultSet) {
         self.prefix = prefix
+        self.resolver = resolver
         self.rs = result_set
     }
     
@@ -27,8 +29,18 @@ struct MBTilesIterator: StringIterator {
         let x = rs.int(forColumn: "x")
         let y = rs.int(forColumn: "y")
         
-        let path = String(format: "%@/%d/%d/%d.png", prefix, z, x, y)
-        return path
+        let tile = MBTile(prefix:self.prefix, z: Int(z), x: Int(x), y: Int(y))
+        
+        let rsp = self.resolver.PathFromMBTile(tile: tile)
+        
+        switch rsp {
+        case .failure(let error):
+            print(error)
+            return ""
+        case .success(let path):
+            return path
+        }
+            
     }
     
 }

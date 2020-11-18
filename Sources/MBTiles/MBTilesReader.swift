@@ -71,7 +71,7 @@ public class MBTilesReader {
             return .failure(Errors.listError)
         }
         
-        let iter = MBTilesIterator(prefix: prefix, result_set: rs)
+        let iter = MBTilesIterator(prefix: prefix, resolver: self.resolver, result_set: rs)
         return .success(iter)
     }
     
