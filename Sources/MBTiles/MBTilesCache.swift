@@ -6,6 +6,7 @@ public class MBTilesCache {
     var logger: Logger?
     var db_pool: MBTilesDatabasePool
     var db_reader: MBTilesReader
+    var resolver: MBTilesResolver
     
     var precache_tiles_throttle = 10
     var skip = Array<String>()
@@ -14,26 +15,26 @@ public class MBTilesCache {
     public let cache = NSCache<NSString, NSString>()
     public let missing = NSCache<NSString, NSString>()
     
-    public init(db_pool: MBTilesDatabasePool, db_reader: MBTilesReader, throttle: Int, logger: Logger?){
+    public init(db_pool: MBTilesDatabasePool, db_reader: MBTilesReader, resolver: MBTilesResolver, throttle: Int, logger: Logger?){
 
         self.db_pool = db_pool
         self.db_reader = db_reader
+        self.resolver = resolver
+        
         self.logger = logger
         self.precache_tiles_throttle = throttle
     }
     
     // see notes about onload_callback below (20201118/thisisaaronland)
     
-    public func PrecacheTileData(databases: Array<URL>, callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
+    public func PrecacheTileData(databases: Array<URL>) -> Result<Bool, Error> {
                 
             for url in databases {
-                
-                // let fname = url.lastPathComponent
-                
+                                
                 var path = url.absoluteString
                 path = path.replacingOccurrences(of: "file://", with: "")
                 
-                let db_rsp = self.PrecacheTileDataForDatabase(path: path, callback: callback)
+                let db_rsp = self.PrecacheTileDataForDatabase(path: path)
                 
                 if case .failure(let db_error) = db_rsp {
                     self.logger?.error("Failed to precache '\(path)': \(db_error)")
@@ -46,7 +47,7 @@ public class MBTilesCache {
     // this needs a second "onload" callback that the actual tile data is dispatched to
     // (20201118/thisisaaronland)
     
-    public func PrecacheTileDataForDatabase(path: String,  callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
+    public func PrecacheTileDataForDatabase(path: String) -> Result<Bool, Error> {
         
         self.logger?.info("Precache tiles for \(path)")
         
@@ -78,7 +79,7 @@ public class MBTilesCache {
                 
                 DispatchQueue.global(qos: .default).async {
                     
-                    let tile_rsp = callback(tile_path)
+                    let tile_rsp = self.resolver.MBTileFromPath(path: tile_path)
                     
                     var tile: MBTile
                     

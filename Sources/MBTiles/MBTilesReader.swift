@@ -16,13 +16,25 @@ public class MBTilesReader {
     }
     
     var logger: Logger?
+    var resolver: MBTilesResolver
     
-    public init(logger: Logger?) {
+    public init(resolver: MBTilesResolver, logger: Logger?) {
         self.logger = logger
+        self.resolver = resolver
     }
        
     public func ListTiles(db_pool: MBTilesDatabasePool, db_path: String) -> Result<StringIterator, Error> {
                 
+        let prefix_rsp = self.resolver.PrefixFromPath(path: db_path)
+        var prefix: String
+        
+        switch prefix_rsp {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let p):
+            prefix = p
+        }
+        
         let conn_rsp = db_pool.GetConnection(db_path: db_path)
         
         let db: FMDatabaseQueue
@@ -59,7 +71,7 @@ public class MBTilesReader {
             return .failure(Errors.listError)
         }
         
-        let iter = MBTilesIterator(prefix: db_path, result_set: rs)
+        let iter = MBTilesIterator(prefix: prefix, result_set: rs)
         return .success(iter)
     }
     
