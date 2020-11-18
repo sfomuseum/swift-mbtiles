@@ -58,6 +58,11 @@ public class MBTilesCache {
             return .failure(error)
         case .success(let iter):
             
+            defer {
+                print("CLOSE ITERATOR", path)
+                iter.close()
+            }
+            
             var dispatched = 0
             
             while true {

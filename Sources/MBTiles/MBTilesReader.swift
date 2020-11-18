@@ -146,6 +146,7 @@ public class MBTilesReader {
                 
                 let rs = try db.executeQuery(q, values: [ z, x, y])
                 rs.next()
+                rs.close()
                 
                 guard let data = rs.data(forColumn: "tile_data") else {
                     self.logger?.warning("Tile query failed : No data")

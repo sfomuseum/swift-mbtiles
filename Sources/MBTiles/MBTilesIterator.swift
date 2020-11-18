@@ -7,6 +7,7 @@ import FMDB
 
 public protocol StringIterator {
     func next() -> String
+    func close() -> Void
 }
 
 struct MBTilesIterator: StringIterator {
@@ -43,6 +44,9 @@ struct MBTilesIterator: StringIterator {
             
     }
     
+    func close() -> Void {
+        self.rs.close()
+    }
 }
 
 
