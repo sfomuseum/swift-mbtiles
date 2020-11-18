@@ -22,6 +22,8 @@ public class MBTilesCache {
         self.precache_tiles_throttle = throttle
     }
     
+    // see notes about onload_callback below (20201118/thisisaaronland)
+    
     public func PrecacheTileData(databases: Array<URL>, callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
                 
             for url in databases {
@@ -41,6 +43,9 @@ public class MBTilesCache {
         return .success(true)
     }
     
+    // this needs a second "onload" callback that the actual tile data is dispatched to
+    // (20201118/thisisaaronland)
+    
     public func PrecacheTileDataForDatabase(path: String,  callback: @escaping (_ rel_path: String) -> Result<MBTile, Error>) -> Result<Bool, Error> {
         
         let tiles_rsp = self.db_reader.ListTiles(db_pool: self.db_pool, db_path: path)
@@ -55,12 +60,9 @@ public class MBTilesCache {
             while true {
                 
                 let tile_path = iter.next()
-                
-                // while case let tile_path = iter.next() {
-                
+                                
                 if tile_path == "" {
                     self.logger?.info("next tile path is empty \(path)")
-                    // self.debugLog(body: "Tile path is empty. Stopping pre-cache.")
                     break
                 }
                 
