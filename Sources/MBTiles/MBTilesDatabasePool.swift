@@ -23,7 +23,7 @@ public class MBTilesDatabasePool {
     var dbconns: [String: FMDatabaseQueue]    
     var logger: Logger?
     
-    public init(root: URL?, logger: Logger?) {
+    public init(logger: Logger?) {
         self.dbconns = [:]
         self.logger = logger
     }
