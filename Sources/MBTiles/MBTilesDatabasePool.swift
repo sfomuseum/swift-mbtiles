@@ -32,19 +32,22 @@ public class MBTilesDatabasePool {
                 
         self.logger?.debug("Get database connection for \(db_path)")
         semaphore.wait()
+        
+        defer {
+            semaphore.signal()
+        }
+        
         // wishing I could Go-style defer semaphore.signal()...
         
         var conn: FMDatabaseQueue!
         
         if let _ = dbconns[db_path] {
             conn = dbconns[db_path]
-            semaphore.signal()
             return .success(conn)
         }
         
         if !FileManager.default.fileExists(atPath: db_path) {
             self.logger?.error("SQLite database \(db_path) does not exist")
-            semaphore.signal()
             return .failure(Errors.isNotExistError)
         }
         
@@ -56,9 +59,7 @@ public class MBTilesDatabasePool {
             return .failure(Errors.databaseOpen)
         }
         
-        dbconns[db_path] = db
-        semaphore.signal()
-        
+        dbconns[db_path] = db        
         return .success(db)
     }
 }

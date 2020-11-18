@@ -1,7 +1,5 @@
 public struct MBTile {
     
-    // TO DO: ensure that x, y, z are Ints
-    
     public var prefix: String
     public var z: Int
     public var x: Int
