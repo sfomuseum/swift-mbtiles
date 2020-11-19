@@ -1,6 +1,6 @@
 import Foundation
-import FMDB
 import Logging
+import SQLite
 
 #if os(iOS)
 import UIKit
@@ -22,9 +22,9 @@ public class MBTilesReader {
         self.logger = logger
         self.resolver = resolver
     }
-       
-    public func ListTiles(db_pool: MBTilesDatabasePool, db_path: String) -> Result<StringIterator, Error> {
-                
+    
+    public func ListTiles(db_pool: MBTilesDatabasePool, db_path: String) -> Swift.Result<StringIterator, Error> {
+        
         let prefix_rsp = self.resolver.PrefixFromPath(path: db_path)
         var prefix: String
         
@@ -35,44 +35,34 @@ public class MBTilesReader {
             prefix = p
         }
         
-        let conn_rsp = db_pool.GetConnection(db_path: db_path)
+        let conn: Connection
         
-        let db: FMDatabaseQueue
+        let conn_rsp = db_pool.GetConnection(db_path: db_path)
         
         switch conn_rsp {
         case .failure(let error):
             return .failure(error)
-        case .success(let d):
-            db = d
+        case .success(let c):
+            conn = c
         }
         
         let q = "SELECT map.zoom_level AS z, map.tile_column AS x, map.tile_row AS y, images.tile_data AS tile_data FROM map JOIN images ON images.tile_id = map.tile_id"
         
         // query = query + " WHERE z < 19 ORDER BY z DESC"
         
-        var rs = FMResultSet()
-        var ok = true
-        
-        db.inTransaction { (db, rollback) in
+        do  {
+            let rsp = try conn.prepare(q)
+            let db_iter = rsp.makeIterator()
             
-            do  {
-                rs = try db.executeQuery(q, values: nil)
-                
-            } catch (let error){
-                self.logger?.warning("List query failed \(error)")
-                rollback.pointee = true
-                ok = false
-                return
-            }
+            let iter = MBTilesIterator(prefix: prefix, resolver: self.resolver, result_set: db_iter)
+            return .success(iter)
             
+        } catch (let error){
+            self.logger?.warning("List query failed \(error)")
+            return .failure(error)
         }
         
-        if !ok {
-            return .failure(Errors.listError)
-        }
         
-        let iter = MBTilesIterator(prefix: prefix, resolver: self.resolver, result_set: rs)
-        return .success(iter)
     }
     
     public func ReadTileAsDataURL(db_pool: MBTilesDatabasePool, db_path: String, tile: MBTile) -> Swift.Result<String, Error> {
@@ -98,7 +88,7 @@ public class MBTilesReader {
         return .success(uri)
     }
     
-    public func ReadTileAsUIImage(db_pool: MBTilesDatabasePool, db_path: String, tile: MBTile)->Result<UIImage, Error>{
+    public func ReadTileAsUIImage(db_pool: MBTilesDatabasePool, db_path: String, tile: MBTile)->Swift.Result<UIImage, Error>{
         
         let data_rsp = ReadTileAsData(db_pool: db_pool, db_path: db_path, tile: tile)
         let data: Data
@@ -121,13 +111,13 @@ public class MBTilesReader {
         
         let conn_rsp = db_pool.GetConnection(db_path: db_path)
         
-        let db: FMDatabaseQueue
+        let conn: Connection
         
         switch conn_rsp {
         case .failure(let error):
             return .failure(error)
-        case .success(let d):
-            db = d
+        case .success(let c):
+            conn = c
         }
         
         let z = tile.z
@@ -138,38 +128,31 @@ public class MBTilesReader {
         let q = "SELECT i.tile_data AS tile_data FROM map m, images i WHERE i.tile_id = m.tile_id AND m.zoom_level=? AND m.tile_column=? AND m.tile_row=?"
         
         var body = Data()
-        var ok = true
         
-        db.inTransaction { (db, rollback) in
+        // please move this in to init()
+        var get_tile: Statement
+        
+        do  {
+            get_tile = try conn.prepare(q)
+        } catch {
+            return .failure(error)
+        }
+        
+        var tile_data: SQLite.Blob?
+        
+        do {
+            try get_tile = get_tile.run(z, x, y)
+            tile_data = try get_tile.scalar() as? SQLite.Blob
             
-            do  {
-                
-                let rs = try db.executeQuery(q, values: [ z, x, y])
-                rs.next()
-                rs.close()
-                
-                guard let data = rs.data(forColumn: "tile_data") else {
-                    self.logger?.warning("Tile query failed : No data")
-                    rollback.pointee = true
-                    ok = false
-                    return
-                }
-                
-                body = data
-                
-            } catch (let error){
-                self.logger?.warning("Tile query failed \(error)")
-                rollback.pointee = true
-                ok = false
-                return
+            if (tile_data == nil){
+                return .failure(Errors.nullDataError)
             }
             
+        } catch {
+            print(db_path, z, x, y, error)
+            return .failure(error)
         }
         
-        if !ok {
-            return .failure(Errors.nullDataError)
-        }
-        
-        return .success(body)
+        return .success(tile_data as! SQLite.Blob)
     }
 }

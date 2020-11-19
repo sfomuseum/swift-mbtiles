@@ -1,26 +1,18 @@
 import Foundation
 import Logging
-import FMDB
+import SQLite
 
 public class MBTilesDatabasePool {
     
     public enum Errors: Error {
-        case notAnError
         case isNotExistError
-        case pngError
-        case blobError
-        case nullDataError
-        case listError
-        case databaseURI
-        case databaseOpen
-        case databaseTile
     }
     
     // https://developer.apple.com/documentation/dispatch/dispatchsemaphore
     // https://stackoverflow.com/questions/46169519/mutex-alternatives-in-swift
     let semaphore = DispatchSemaphore(value: 1)
     
-    var dbconns: [String: FMDatabaseQueue]    
+    var dbconns: [String: Connection]
     var logger: Logger?
     
     public init(logger: Logger?) {
@@ -28,7 +20,7 @@ public class MBTilesDatabasePool {
         self.logger = logger
     }
     
-    public func GetConnection(db_path: String)->Swift.Result<FMDatabaseQueue, Error> {
+    public func GetConnection(db_path: String)->Swift.Result<Connection, Error> {
                 
         self.logger?.debug("Get database connection for \(db_path)")
         semaphore.wait()
@@ -39,7 +31,7 @@ public class MBTilesDatabasePool {
         
         // wishing I could Go-style defer semaphore.signal()...
         
-        var conn: FMDatabaseQueue!
+        var conn: Connection!
         
         if let _ = dbconns[db_path] {
             conn = dbconns[db_path]
@@ -51,15 +43,13 @@ public class MBTilesDatabasePool {
             return .failure(Errors.isNotExistError)
         }
         
-        guard let db_uri = URL(string: db_path) else {
-            return .failure(Errors.databaseURI)
+        do {
+            conn = try Connection(db_path, readonly: true)
+        } catch {
+            return .failure(error)
         }
         
-        guard let db = FMDatabaseQueue(url: db_uri) else {
-            return .failure(Errors.databaseOpen)
-        }
-        
-        dbconns[db_path] = db        
-        return .success(db)
+        dbconns[db_path] = conn
+        return .success(conn)
     }
 }
