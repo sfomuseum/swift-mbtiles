@@ -1,6 +1,6 @@
 # swift-mbtiles
 
-Swift package for reading and caching MBTile databases.
+Swift package for reading and caching data from MBTile databases.
 
 ## Important
 
