@@ -127,7 +127,7 @@ public class MBTilesReader {
         
         let q = "SELECT i.tile_data AS tile_data FROM map m, images i WHERE i.tile_id = m.tile_id AND m.zoom_level=? AND m.tile_column=? AND m.tile_row=?"
         
-        var body = Data()
+        // something something something max zoom...
         
         // please move this in to init()
         var get_tile: Statement
@@ -138,13 +138,13 @@ public class MBTilesReader {
             return .failure(error)
         }
         
-        var tile_data: SQLite.Blob?
+        var blob: SQLite.Blob?
         
         do {
             try get_tile = get_tile.run(z, x, y)
-            tile_data = try get_tile.scalar() as? SQLite.Blob
+            blob = try get_tile.scalar() as? SQLite.Blob
             
-            if (tile_data == nil){
+            if (blob == nil){
                 return .failure(Errors.nullDataError)
             }
             
@@ -153,6 +153,7 @@ public class MBTilesReader {
             return .failure(error)
         }
         
-        return .success(tile_data as! SQLite.Blob)
+        let data = Data.fromDatatypeValue(blob!)
+        return .success(data)
     }
 }

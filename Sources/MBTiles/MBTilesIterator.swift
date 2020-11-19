@@ -1,5 +1,5 @@
 import Foundation
-import FMDB
+import SQLite
 
 // https://developer.apple.com/documentation/swift/iteratorprotocol
 // https://github.com/apple/swift/blob/master/docs/SequencesAndCollections.rst
@@ -14,9 +14,9 @@ struct MBTilesIterator: StringIterator {
     
     let resolver: MBTilesResolver
     let prefix: String
-    let rs: FMResultSet
+    let rs: Statement
     
-    init(prefix: String, resolver: MBTilesResolver, result_set: FMResultSet) {
+    init(prefix: String, resolver: MBTilesResolver, result_set: Statement) {
         self.prefix = prefix
         self.resolver = resolver
         self.rs = result_set
@@ -24,11 +24,13 @@ struct MBTilesIterator: StringIterator {
     
     func next() ->String {
         
-        rs.next()
-                
-        let z = rs.int(forColumn: "z")
-        let x = rs.int(forColumn: "x")
-        let y = rs.int(forColumn: "y")
+        guard let t = rs.next() else {
+            return ""
+        }
+        
+        let z = t[0] as! Int64
+        let x = t[1] as! Int64
+        let y = t[2] as! Int64
         
         let tile = MBTile(prefix:self.prefix, z: Int(z), x: Int(x), y: Int(y))
         
@@ -41,12 +43,10 @@ struct MBTilesIterator: StringIterator {
         case .success(let path):
             return path
         }
-            
+        
     }
     
-    func close() -> Void {
-        self.rs.close()
-    }
+    func close() -> Void {}
 }
 
 
