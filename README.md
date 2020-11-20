@@ -38,6 +38,8 @@ Under the hood this package is using [stephencelis/SQLite.swift](https://github.
 
 There is also [a branch that uses FMDB](https://github.com/sfomuseum/swift-mbtiles/tree/fmdb) but it contains a crashing bug that I haven't been able to debug (taking in to account all the things that the documentation says to do).
 
+Did you notice the instatiation of the `TileResolver()` class above? This is code that you will need to implement and that conforms to the `MBTilesResolver` protocol below. This is code used to resolve a URL in to MBTile database specifics like the name of the database and Z, X, Y coordinates.
+
 Once all of these classes have been instantiated you can precache the tiles in your MBTiles databases like this:
 
 ```
@@ -106,8 +108,6 @@ case .success(let tile_data):
 
 
 ## MBTilesResolver
-
-Did you notice the instatiation of the `TileResolver()` class above? This is code that you will need to implement and that conforms to the `MBTilesResolver` protocol. This is code used to resolve a URL in to MBTile database specifics like the name of the database and Z, X, Y coordinates.
 
 ```
 public protocol MBTilesResolver {
