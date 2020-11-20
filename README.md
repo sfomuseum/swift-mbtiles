@@ -4,7 +4,7 @@ Swift package for reading and caching data from MBTile databases.
 
 ## Important
 
-Work in progress. Documentation to follow.
+Work in progress, including documentation.
 
 ## Example
 
@@ -47,10 +47,10 @@ DispatchQueue.global(qos: .background).async {
 	var database_urls = Array<URL>()
                 
 	switch db_rsp {
-		case .failure(let error):
-			// handle error here
-		case .success(let urls):
-			database_urls = urls
+	case .failure(let error):
+		// handle error here
+	case .success(let urls):
+		database_urls = urls
 	}
                 
 	let cache_rsp = tiles_cache.PrecacheTileData(databases: database_urls)
@@ -73,7 +73,7 @@ if let tile_data = tiles_cache.cache.object(forKey: tile_path as NSString) {
 }
 ```
 
-See the way we're calling `tiles_cache.missing.object` and `tiles_cache.cache.object` ? These is not ideal interfaces for dealing with tile caching. What's really needed is an interface for _tiles_ that sits on top of a generic interface for caching and there hasn't been the luxury of time to figure that out yet. It is definitely an area for improvement.
+See the way we're calling `tiles_cache.missing.object` and `tiles_cache.cache.object` ? These are not ideal interfaces for dealing with tile caching. What's really needed is an interface for _tiles_ that sits on top of a generic interface for caching and there hasn't been the luxury of time to figure that out yet. It is definitely an area for improvement.
 
 Assuming there isn't a cached version (and we don't know that the tile is missing) the tile data would be retrieved like this:
 
@@ -82,25 +82,25 @@ let tile_path = "tiles/example/10/12/345.png"
 
 var tile: MBTile
 			
-let tile_rsp = self.app.tiles_resolver.MBTileFromPath(path: tile_path)
+let tile_rsp = tiles_resolver.MBTileFromPath(path: tile_path)
 			
 switch tile_rsp {
-	case .failure(let error):
-		// handle error here
-	case .success(let t):
-		tile = t
+case .failure(let error):
+	// handle error here
+case .success(let t):
+	tile = t
 }
 			
 let db_path = tiles_collection.DatabasePathFromTile(tile: tile)
 			
-let data_rsp = tiles_reader.ReadTileAsDataURL(db_pool: self.app.tiles_pool, db_path: db_path, tile: tile)
+let data_rsp = tiles_reader.ReadTileAsDataURL(db_pool: tiles_pool, db_path: db_path, tile: tile)
 			
 switch data_rsp {
-	case .failure(let error):
-		// handle error here				
-	case .success(let tile_data):
-		tiles_cache.cache.setObject(NSString(string: tile_data), forKey:NSString(string: tile_path))
-		// do something with tile data here
+case .failure(let error):
+	// handle error here				
+case .success(let tile_data):
+	tiles_cache.cache.setObject(NSString(string: tile_data), forKey:NSString(string: tile_path))
+	// do something with tile data here
 }
 ```
 
