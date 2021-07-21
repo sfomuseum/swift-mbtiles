@@ -73,13 +73,15 @@ public class MBTilesReader {
         
         switch im_result {
         case .failure(let error):
-            return .failure("Failed to read tile as UIImage, \(error)" as! Error)
+            self.logger?.warning("Failed to read tile as UIImage, \(error)")
+            return .failure(error)
         case .success(let i):
             im = i
         }
         
         guard let im_data = im.pngData() as NSData? else {
-            return .failure("Failed to derived data from PNG, \(Errors.pngError)" as! Error)
+            self.logger?.warning("Failed to derived data from PNG, \(Errors.pngError)")
+            return .failure(Errors.pngError)
         }
         
         let b64 = im_data.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
@@ -95,12 +97,14 @@ public class MBTilesReader {
         
         switch data_rsp {
         case .failure(let error):
+            self.logger?.warning("Failed to read tile (as data) for \(tile.String()), \(error)")
             return .failure(error)
         case .success(let d):
             data = d
         }
         
         guard let im = UIImage(data: data) else {
+            self.logger?.warning("Failed to derive UIImage for \(tile.String()), \(Errors.blobError)")
             return .failure(Errors.blobError)
         }
         

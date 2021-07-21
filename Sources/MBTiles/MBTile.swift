@@ -12,4 +12,7 @@ public struct MBTile {
         self.y = y
     }
 
+    public func String() -> String {
+        return "\(prefix)/\(z)/\(x)/\(y)"
+    }
 }
