@@ -79,6 +79,7 @@ public class MBTilesReader {
         }
         
         let uri = "data:image/png;base64," + data.base64EncodedString()
+        self.logger?.info("Return OK for \(tile.String())")
         return .success(uri)
         
         /*
@@ -135,6 +136,7 @@ public class MBTilesReader {
         
         switch conn_rsp {
         case .failure(let error):
+            self.logger?.warning("Failed to creata database connection for \(db_path), \(error)")
             return .failure(error)
         case .success(let c):
             conn = c
@@ -165,6 +167,7 @@ public class MBTilesReader {
             blob = try get_tile.scalar() as? SQLite.Blob
             
             if (blob == nil){
+                // self.logger?.warning("Failed to create SQLite.Blob for \(tile.String())")
                 return .failure(Errors.nullDataError)
             }
             
