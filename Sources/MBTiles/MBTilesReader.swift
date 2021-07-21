@@ -78,8 +78,9 @@ public class MBTilesReader {
             data = d
         }
         
+        // See this? We're assuming PNG images here which may not always be true.
+        // Today, it is true however... (20210721/thisisaaronland)
         let uri = "data:image/png;base64," + data.base64EncodedString()
-        self.logger?.info("Return OK for \(tile.String())")
         return .success(uri)
         
         /*
