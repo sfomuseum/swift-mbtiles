@@ -48,14 +48,13 @@ public class MBTilesCache {
     // (20201118/thisisaaronland)
     
     public func PrecacheTileDataForDatabase(path: String) -> Result<Bool, Error> {
-        
+                
         self.logger?.info("Precache tiles for \(path)")
         
         let tiles_rsp = self.db_reader.ListTiles(db_pool: self.db_pool, db_path: path)
         
         switch tiles_rsp {
         case .failure(let error):
-	    print("SAD 1")
             return .failure(error)
         case .success(let iter):
             
@@ -109,7 +108,7 @@ public class MBTilesCache {
                         }
                         
                     case .failure(let error):
-                        self.logger?.error("Failed to load tile for pre-caching '\(tile_path)': \(error)")
+                        self.logger?.error("Failed to load (ReadTileAsDataURL) tile for pre-caching '\(tile_path)': \(error)")
                     }
                 }
                 

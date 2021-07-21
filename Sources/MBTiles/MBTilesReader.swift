@@ -73,13 +73,13 @@ public class MBTilesReader {
         
         switch im_result {
         case .failure(let error):
-            return .failure(error)
+            return .failure("Failed to read tile as UIImage, \(error)" as! Error)
         case .success(let i):
             im = i
         }
         
         guard let im_data = im.pngData() as NSData? else {
-            return .failure(Errors.pngError)
+            return .failure("Failed to derived data from PNG, \(Errors.pngError)" as! Error)
         }
         
         let b64 = im_data.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
@@ -126,6 +126,8 @@ public class MBTilesReader {
         
         
         let q = "SELECT i.tile_data AS tile_data FROM map m, images i WHERE i.tile_id = m.tile_id AND m.zoom_level=? AND m.tile_column=? AND m.tile_row=?"
+        
+        print("QUERY \(q)")
         
         // something something something max zoom...
         
