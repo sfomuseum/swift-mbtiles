@@ -67,6 +67,21 @@ public class MBTilesReader {
     
     public func ReadTileAsDataURL(db_pool: MBTilesDatabasePool, db_path: String, tile: MBTile) -> Swift.Result<String, Error> {
         
+        let data_rsp = ReadTileAsData(db_pool: db_pool, db_path: db_path, tile: tile)
+        let data: Data
+        
+        switch data_rsp {
+        case .failure(let error):
+            self.logger?.warning("Failed to read tile (as data) for \(tile.String()), \(error)")
+            return .failure(error)
+        case .success(let d):
+            data = d
+        }
+        
+        let uri = "data:image/png;base64," + data.base64EncodedString()
+        return .success(uri)
+        
+        /*
         let im_result = ReadTileAsUIImage(db_pool: db_pool, db_path: db_path, tile: tile)
         
         let im: UIImage
@@ -88,6 +103,7 @@ public class MBTilesReader {
         let uri = "data:image/png;base64," + b64
         
         return .success(uri)
+        */
     }
     
     public func ReadTileAsUIImage(db_pool: MBTilesDatabasePool, db_path: String, tile: MBTile)->Swift.Result<UIImage, Error>{
@@ -104,9 +120,7 @@ public class MBTilesReader {
         }
         
         guard let im = UIImage(data: data) else {
-            self.logger?.warning("Failed to derive UIImage for \(tile.String()), \(Errors.blobError)")
-            self.logger?.warning("WTF \(data.count) b64: \(data.base64EncodedString())")
-            
+            self.logger?.warning("Failed to derive UIImage for \(tile.String())")
             return .failure(Errors.blobError)
         }
         
