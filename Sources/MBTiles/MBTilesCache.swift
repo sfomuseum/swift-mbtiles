@@ -55,11 +55,12 @@ public class MBTilesCache {
         
         switch tiles_rsp {
         case .failure(let error):
+	    print("SAD 1")
             return .failure(error)
         case .success(let iter):
             
             defer {
-                print("CLOSE ITERATOR", path)
+		self.logger?.debug("Close iterator for \(path)")
                 iter.close()
             }
             
