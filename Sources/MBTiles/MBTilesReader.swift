@@ -105,6 +105,8 @@ public class MBTilesReader {
         
         guard let im = UIImage(data: data) else {
             self.logger?.warning("Failed to derive UIImage for \(tile.String()), \(Errors.blobError)")
+            self.logger?.warning("WTF \(data.count) b64: \(data.base64EncodedString())")
+            
             return .failure(Errors.blobError)
         }
         
@@ -130,9 +132,7 @@ public class MBTilesReader {
         
         
         let q = "SELECT i.tile_data AS tile_data FROM map m, images i WHERE i.tile_id = m.tile_id AND m.zoom_level=? AND m.tile_column=? AND m.tile_row=?"
-        
-        print("QUERY \(q)")
-        
+                
         // something something something max zoom...
         
         // please move this in to init()
