@@ -12,7 +12,7 @@ public class MBTilesCache {
     var skip = Array<String>()
     
     public let reading = AtomicInteger(value:0)    
-    public let cache = NSCache<NSString, NSString>()
+    public let cache = NSCache<NSString, NSData>()
     public let missing = NSCache<NSString, NSString>()
     
     public init(db_pool: MBTilesDatabasePool, db_reader: MBTilesReader, resolver: MBTilesResolver, throttle: Int, logger: Logger?){
@@ -96,7 +96,7 @@ public class MBTilesCache {
                         tile = t
                     }
                     
-                    let load_rsp = self.db_reader.ReadTileAsDataURL(db_pool: self.db_pool, db_path: path, tile: tile)
+                    let load_rsp = self.db_reader.ReadTileAsData(db_pool: self.db_pool, db_path: path, tile: tile)
                     
                     switch load_rsp {
                     case .success(let tile_data) :
@@ -104,7 +104,7 @@ public class MBTilesCache {
                         self.logger?.debug("Preloaded \(tile_path)")
                         
                         DispatchQueue.main.async {
-                            self.cache.setObject(NSString(string: tile_data), forKey:NSString(string: tile_path))
+                            self.cache.setObject(NSData(data: tile_data), forKey:NSString(string: tile_path))
                         }
                         
                     case .failure(let error):
